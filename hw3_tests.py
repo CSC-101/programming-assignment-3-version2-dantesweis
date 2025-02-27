@@ -1,7 +1,8 @@
 import data
 import build_data
 import unittest
-
+import hw3
+from data import CountyDemographics
 
 # These two values are defined to support testing below. The
 # data within these structures should not be modified. Doing
@@ -180,27 +181,175 @@ class TestCases(unittest.TestCase):
 
     # Part 1
     # test population_total
+    def test_population_total(self):
+        pop = build_data.get_data()
+        self.assertEqual(hw3.population_total(pop), 318857056)
 
     # Part 2
     # test filter_by_state
+    def test_filter_by_state1(self):
+        data1 = build_data.get_data()
+        CA = hw3.filter_by_state(data1, 'CA')
+        self.assertEqual(len(CA), 58)
 
+    def test_filter_by_state2(self):
+        data1 = build_data.get_data()
+        unknown = hw3.filter_by_state(data1, 'UK')
+        self.assertEqual(len(unknown), 0)
     # Part 3
     # test population_by_education
+    def test_population_by_education(self):
+        data1 = reduced_data
+        slo_county = [county for county in data1 if county.county == "San Luis Obispo County"]
+        result = hw3.population_by_education(slo_county, "Bachelor's Degree or Higher")
+        self.assertEqual(result, 87911.145)
+
+    def test_population_by_education2(self):
+        data1 = reduced_data
+        result = hw3.population_by_education(data1, "Nonexistent Degree")
+        self.assertEqual(result, 0)
+
     # test population_by_ethnicity
+    def test_population_by_ethnicity(self):
+        data1 = reduced_data
+        CA = [county for county in data1 if county.state == "CA"]
+        result = hw3.population_by_ethnicity(CA, "Two or More Races")
+        expected_result = ((279083 * 0.034) + (207590 * 0.050))
+        self.assertEqual(result, expected_result)
+
+    def test_population_by_ethnicity2(self):
+        data1 = reduced_data
+        result = hw3.population_by_ethnicity(data1, "Nonexistent Ethnicity")
+        self.assertEqual(result, 0)
+
     # test population_below_poverty_level
+    def test_population_below_poverty_level1(self):
+        data1 = reduced_data
+        CA: list[CountyDemographics] = [county for county in data1 if county.state == "CA"]
+        result = hw3.population_below_poverty_level(CA)
+        expected_result = (279083 * 0.143) + (207590 * 0.191)
+        self.assertAlmostEqual(result, expected_result)
+
+    def test_population_below_poverty_level2(self):
+        result = hw3.population_below_poverty_level([])
+        self.assertEqual(result, 0)
 
     # Part 4
     # test percent_by_education
+    def test_percent_by_education(self):
+        data1 = reduced_data
+        CA = [county for county in data1 if county.state == "CA"]
+        result = hw3.percent_by_education(CA, "Bachelor's Degree or Higher")
+        total_edu_population = (279083 * 0.315) + (207590 * 0.379)
+        total_pop = sum(county.population.get("2014 Population", 0) for county in CA)
+        expected_result = (total_edu_population / total_pop) * 100
+        self.assertAlmostEqual(result, expected_result)
+
+    def test_percent_by_education2(self):
+        data1 = reduced_data
+        CA = [county for county in data1 if county.state == "CA"]
+        result = hw3.percent_by_education(CA, "Invalid Key")
+        self.assertEqual(result, 0)
     # test percent_by_ethnicity
+    def test_percent_by_ethnicity(self):
+        data1 = reduced_data
+        CA = [county for county in data1 if county.state == "CA"]
+        result = hw3.percent_by_ethnicity(CA, "Two or More Races")
+        total_ethnicity_population = (279083 * 0.034) + (207590 * 0.050)
+        total_pop = sum(county.population.get("2014 Population", 0) for county in CA)
+        expected_result = (total_ethnicity_population / total_pop) * 100
+        self.assertAlmostEqual(result, expected_result)
+
+    def test_percent_by_ethnicity2(self):
+        data1 = reduced_data
+        ca_counties = [county for county in data1 if county.state == "CA"]
+        result = hw3.percent_by_ethnicity(ca_counties, "Invalid Key")
+        self.assertEqual(result, 0)
+
     # test percent_below_poverty_level
+    def test_percent_below_poverty_level(self):
+        data1 = reduced_data
+        ca_counties = [county for county in data1 if county.state == "CA"]
+        result = hw3.percent_below_poverty_level(ca_counties)
+        total_poverty_population = (279083 * 0.143) + (207590 * 0.191)  # Only CA counties
+        total_pop = sum(county.population.get("2014 Population", 0) for county in ca_counties)
+        expected_result = (total_poverty_population / total_pop) * 100
+        self.assertAlmostEqual(result, expected_result)
+
+    def test_percent_below_poverty_level2(self):
+        result = hw3.percent_below_poverty_level([])
+        self.assertEqual(result, 0)
 
     # Part 5
     # test education_greater_than
+    def test_education_greater_than(self):
+        data1 = reduced_data
+        result = hw3.education_greater_than(data1, "Bachelor's Degree or Higher", 30.0)
+        expected_counties = [county for county in data1 if county.education.get("Bachelor's Degree or Higher", 0) > 30.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_education_greater_than2(self):
+        data1 = reduced_data
+        result = hw3.education_greater_than(data1, "Bachelor's Degree or Higher", 100.0)
+        self.assertEqual(result, [])
     # test education_less_than
+    def test_education_less_than1(self):
+        data1 = reduced_data
+        result = hw3.education_less_than(data1, "Bachelor's Degree or Higher", 20.0)
+        expected_counties = [county for county in data1 if county.education.get("Bachelor's Degree or Higher", 0) < 20.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_education_less_than2(self):
+        data1 = reduced_data
+        result = hw3.education_less_than(data1, "Bachelor's Degree or Higher", 0.0)
+        self.assertEqual(result, [])
+
     # test ethnicity_greater_than
+    def test_ethnicity_greater_than(self):
+        data1 = reduced_data
+        result = hw3.ethnicity_greater_than(data1, "Hispanic or Latino", 30.0)
+        expected_counties = [county for county in data1 if county.ethnicities.get("Hispanic or Latino", 0) > 30.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_ethnicity_greater_than2(self):
+        data1 = reduced_data
+        result = hw3.ethnicity_greater_than(data1, "Hispanic or Latino", 100.0)
+        self.assertEqual(result, [])
     # test ethnicity_less_than
+    def test_ethnicity_less_than1(self):
+        data1 = reduced_data
+        result = hw3.ethnicity_less_than(data1, "Hispanic or Latino", 20.0)
+        expected_counties = [county for county in data1 if county.ethnicities.get("Hispanic or Latino", 0) < 20.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_ethnicity_less_than2(self):
+        data1 = reduced_data
+        result = hw3.ethnicity_less_than(data1, "Hispanic or Latino", 0.0)
+        self.assertEqual(result, [])
     # test below_poverty_level_greater_than
+    def test_below_poverty_level_greater_than1(self):
+        data1 = reduced_data
+        result = hw3.below_poverty_level_greater_than(data1, 20.0)
+        expected_counties = [county for county in data1 if county.income.get("Persons Below Poverty Level", 0) > 20.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_below_poverty_level_greater_than2(self):
+        data1 = reduced_data
+        result = hw3.below_poverty_level_greater_than(reduced_data, 100.0)
+        self.assertEqual(result, [])
+
+
     # test below_poverty_level_less_than
+    def test_below_poverty_level_less_than1(self):
+        data1 = reduced_data
+        result = hw3.below_poverty_level_less_than(data1, 15.0)
+        expected_counties = [county for county in data1 if county.income.get("Persons Below Poverty Level", 0) < 15.0]
+        self.assertEqual(result, expected_counties)
+
+    def test_below_poverty_level_less_than2(self):
+        data1 = reduced_data
+        result = hw3.below_poverty_level_less_than(data1, 0.0)
+        self.assertEqual(result, [])
 
 
 
